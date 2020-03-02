@@ -3,48 +3,61 @@ using System.Security.Claims;
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Security;
-using AuthNet.Models;  
+using AuthNet.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace AuthNet.Controllers
 {
     [ApiController]
     [Route("customer")]
+    [Authorize]
     public class CustomerController : ControllerBase
     {
-        public CustomerController()
+        private readonly AuthContext _context;
+        public CustomerController(AuthContext context)
         {
-            
+            _context = context;
         }
 
         [HttpGet]
         public IActionResult GetCustomer()
         {
-            return Ok(new { hello = "world" });
+            var cu = _context.Customers;
+            return Ok(new {message = "success retrieve data", status = true, data = cu});
         }
 
-        [HttpGet]
-        public IActionResult Authenticate(Customer customer)
+        [HttpPost]
+        public IActionResult PostCustomer(Customer customer)
         {
-            var customers = new List<Customer>()
-            {
-                
-            };
+            _context.Customers.Add(customer);
+            _context.SaveChanges();
+            return Ok(customer);
+        }
 
-            var tokenHandler = new JwtSecurityTokenHandler();
+        [HttpGet("{id}")]
+        public IActionResult GetCustomerById(int id)
+        {
+            var customer = _context.Customers.First(i => i.Id == id);
+            return Ok(customer);
+        }
 
-            var tokenDescription = new SecurityTokenDescriptor(){
-                Subject = new ClaimsIdentity(new Claim[]{
-        
-                }),
-                Expires = DateTime.UtcNow.AddDays(2),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes("")), SecurityAlgorithms.HmacSha512Signature)
-            };
-            
-            var token = tokenHandler.CreateToken(tokenDescription);
-            return Ok(token);
+        [HttpPut("{id}")]
+        public IActionResult UpdateCustomer(int id)
+        {
+            var customer = _context.Customers.First(i => i.Id == id);
+            customer.FullName = "Na Dul Set";
+            _context.SaveChanges();
+            return Ok(customer);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteCustomer(int id)
+        {
+            var customer = _context.Customers.First(i => i.Id == id);
+            _context.Customers.Remove(customer);
+            _context.SaveChanges();
+            return Ok(customer);
         }
     }
 }
