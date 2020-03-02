@@ -1,3 +1,4 @@
+using System.Text;
 using System.Security.Claims;
 using System;
 using System.Collections.Generic;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security;
+using AuthNet.Models;  
 
 namespace AuthNet.Controllers
 {
@@ -14,7 +16,7 @@ namespace AuthNet.Controllers
     {
         public CustomerController()
         {
-
+            
         }
 
         [HttpGet]
@@ -23,7 +25,8 @@ namespace AuthNet.Controllers
             return Ok(new { hello = "world" });
         }
 
-        public IActionResult Authenticate()
+        [HttpGet]
+        public IActionResult Authenticate(Customer customer)
         {
             var customers = new List<Customer>()
             {
@@ -34,22 +37,14 @@ namespace AuthNet.Controllers
 
             var tokenDescription = new SecurityTokenDescriptor(){
                 Subject = new ClaimsIdentity(new Claim[]{
-                    
-                })
+        
+                }),
+                Expires = DateTime.UtcNow.AddDays(2),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes("")), SecurityAlgorithms.HmacSha512Signature)
             };
-
-            return Ok();
-        }
-
-        public class Customer
-        {
-            public int Id { get; set; }
-            public string FullName { get; set; }
-            public string Username { get; set; }
-            public string Email { get; set; }
-            public string PhoneNumber { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public DateTime UpdatedAt { get; set; }
+            
+            var token = tokenHandler.CreateToken(tokenDescription);
+            return Ok(token);
         }
     }
 }
